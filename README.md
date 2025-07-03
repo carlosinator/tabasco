@@ -15,6 +15,7 @@
 </p><br>
 
 [![arXiv](https://img.shields.io/badge/PDF-arXiv-red)](https://arxiv.org/pdf/2507.00899)
+[![X](https://img.shields.io/badge/X-post-black)](https://x.com/carlos_vonessen/status/1940671990647726539)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![python](https://img.shields.io/badge/-Python_3.11-blue?logo=python&logoColor=white)](https://github.com/pre-commit/pre-commit)
 <br>
@@ -32,7 +33,7 @@
 
 
 ## Main Contributions:
-* [State-of-the-art performance on PoseBusters](paperswithcode.com)
+* State-of-the-art performance on PoseBusters ([link](https://paperswithcode.com/sota/unconditional-molecule-generation-on-geom))
 * 10x speed-up at sampling time (see Table 1)
 * More parameter efficient (see Figure 1)
 * Standard non-equivariant Transformer
