@@ -98,8 +98,13 @@ The model uses a deliberately simplified non-equivariant Transformer that treats
 We combine the required interpolant functionality in one base `Interpolant` class to make the code more readable and extensible. In practice, we found that this significantly increases iteration speed and improves verifiability. The `SDEMetricInterpolant` manages coordinate flows with configurable noise scaling and centering, while `DiscreteInterpolant` handles categorical atom types in the discrete diffusion framework. Each interpolant defines four key operations: noise sampling, path creation between data points, loss computation, and explicit-Euler stepping during generation. This modular design allows mixing different interpolation strategies for different molecular properties while maintaining a unified training loop.
 
 
-## Citing this work
+## Citation
 
 ```
-# todo
+@article{vonessen2025tabasco,
+      title={TABASCO: A Fast, Simplified Model for Molecular Generation with Improved Physical Quality}, 
+      author={Carlos Vonessen and Charles Harris and Miruna Cretu and Pietro Liò},
+      year={2025},
+      url={https://arxiv.org/abs/2507.00899}, 
+}
 ```
