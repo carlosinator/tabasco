@@ -1,0 +1,44 @@
+# @package _global_
+
+tags: ["geom", "hot"]
+
+datamodule:
+  _target_: tabasco.data.lmdb_datamodule.LmdbDataModule
+
+  data_dir: ./data/processed_geom_train.pt
+  val_data_dir: ./data/processed_geom_val.pt
+  test_data_dir: ./data/processed_geom_test.pt
+  lmdb_dir: ./data/lmdb_geom
+
+  add_random_rotation: true
+  add_random_permutation: false
+  reorder_to_smiles_order: true
+  remove_hydrogens: true
+
+  batch_size: 256
+  num_workers: 31
+
+model:
+  net:
+    _target_: tabasco.models.components.transformer_module.TransformerModule
+    hidden_dim: 256
+    num_layers: 16
+    num_heads: 8
+    activation: SiLU
+    implementation: reimplemented # pytorch
+    cross_attention: true
+
+callbacks:
+  ema:
+    _target_: tabasco.callbacks.ema.EMA
+    decay: 0.999
+    every_n_steps: 1
+
+lightning_module:
+  optimizer:
+    lr: 0.002
+
+logger:
+  wandb:
+    name: "tabasco-hot-geom"
+    project: "tabasco"

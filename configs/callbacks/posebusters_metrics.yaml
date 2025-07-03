@@ -1,0 +1,5 @@
+posebusters_metrics:
+  _target_: tabasco.callbacks.PoseBustersCallback
+  num_samples: 100
+  compute_every: 5
+  num_sampling_steps: 100

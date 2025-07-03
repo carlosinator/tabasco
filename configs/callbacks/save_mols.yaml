@@ -1,0 +1,7 @@
+save_mols:
+  _target_: tabasco.callbacks.SaveGeneratedMolsCallback
+  num_samples: 100
+  num_display_mols: 10
+  num_trajectories: 10
+  num_sampling_steps: 100
+  compute_every: 5

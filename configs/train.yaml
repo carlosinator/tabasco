@@ -1,0 +1,16 @@
+defaults:
+  - _self_
+  - lightning_module: lightning_tabasco
+  - model: flow_model
+  - datamodule: lmdb_datamodule # inmemory_datamodule
+  - logger: wandb
+  - paths: default
+  - globals: globals
+  - trainer: default
+  - extras: default
+  - optional local: default
+  - callbacks: default
+  - experiment: null
+
+train: True
+ckpt_path: null

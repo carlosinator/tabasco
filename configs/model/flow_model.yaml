@@ -1,0 +1,46 @@
+_target_: tabasco.models.flow_model.FlowMatchingModel
+
+net:
+  _target_: tabasco.models.components.transformer_module.TransformerModule
+  spatial_dim: ${globals.spatial_dim}
+  atom_dim: ${globals.atom_dim}
+  hidden_dim: 256
+  num_layers: 16
+  num_heads: 8
+  implementation: reimplemented # pytorch
+  cross_attention: true
+
+compile: false
+interdist_loss: null
+time_distribution: beta
+time_alpha_factor: 1.8
+num_random_augmentations: 7 # +1 (for the original sample) = 8
+sample_schedule: log
+
+coords_interpolant:
+  _target_: tabasco.flow.interpolate.SDEMetricInterpolant
+  key: coords
+  loss_weight: 1.0
+  scale_noise_by_log_num_atoms: false
+  noise_scale: 1.0
+  langevin_sampling_schedule:
+    _target_: tabasco.sample.noise_schedule.SampleNoiseSchedule
+    cutoff: 0.9
+  white_noise_sampling_scale: 0.01
+  time_factor:
+    _target_: tabasco.flow.time_factor.InverseTimeFactor
+    max_value: 100.0
+    min_value: 0.05
+    zero_before: 0.0
+    eps: 1e-6
+
+atomics_interpolant:
+  _target_: tabasco.flow.interpolate.DiscreteInterpolant
+  key: atomics
+  loss_weight: 0.1
+  time_factor:
+    _target_: tabasco.flow.time_factor.InverseTimeFactor
+    max_value: 100.0
+    min_value: 0.05
+    zero_before: 0.0
+    eps: 1e-6

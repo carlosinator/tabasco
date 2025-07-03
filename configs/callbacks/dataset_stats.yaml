@@ -1,0 +1,2 @@
+dataset_stats:
+  _target_: tabasco.callbacks.DatasetStatsCallback
