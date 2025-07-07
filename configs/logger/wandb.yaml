@@ -6,10 +6,10 @@ wandb:
   save_dir: "${paths.output_dir}"
   offline: False
   id: null # pass correct id to resume experiment!
-  project: "psynth0"
+  project: "tabasco"
   log_model: False
   prefix: ""
-  entity: "carlosinator"
+  entity: ""
   group: ""
   tags: []
   job_type: ""
