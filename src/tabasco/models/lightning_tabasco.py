@@ -111,7 +111,9 @@ class LightningTabasco(L.LightningModule):
                 dataset_smiles_list=torch.load(
                     os.path.join(os.getcwd(), "data", "lmdb_geom", "smiles.pt"),
                     weights_only=False,
-                ),
+                ) if os.path.exists(
+                    os.path.join(os.getcwd(), "data", "lmdb_geom", "smiles.pt")
+                ) else None,
                 removeHs=kwargs.get("removeHs", False),
             )
             val_generation_evaluator.device = self.device
