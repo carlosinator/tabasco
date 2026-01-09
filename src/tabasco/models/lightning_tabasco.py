@@ -1,12 +1,20 @@
+import os
+import time
+from datetime import date
 from typing import Dict
 
 import lightning as L
+import numpy as np
 import torch
 import torch.nn as nn
 from lightning.pytorch.utilities import grad_norm
+from torch.nn import ModuleDict
 from torch.optim.optimizer import Optimizer
+from torchmetrics import MeanMetric
 
 from tabasco.chem.convert import MoleculeConverter
+from tabasco.data.utils import batch_to_list
+from tabasco.eval.molecule_generation import MoleculeGenerationEvaluator
 from tabasco.utils.metrics import (
     MolecularConnectivity,
     MolecularLipinski,
@@ -18,6 +26,7 @@ from tabasco.utils.metrics import (
     AtomTypeDistribution,
     AtomFractionMetric,
 )
+from tabasco.utils.pylogger import RankedLogger
 
 
 class LightningTabasco(L.LightningModule):
@@ -92,8 +101,78 @@ class LightningTabasco(L.LightningModule):
 
     def sample(self, **kwargs):
         """Sample from the model."""
+        t_start = time.time()
+
         with torch.no_grad():
-            return self.model.sample(**kwargs)
+            out_batch = self.model.sample(**kwargs)
+
+        if kwargs.get("evaluate_samples", False):
+            val_generation_evaluator = MoleculeGenerationEvaluator(
+                dataset_smiles_list=torch.load(
+                    os.path.join(os.getcwd(), "data", "lmdb_geom", "smiles.pt"),
+                    weights_only=False,
+                ),
+                removeHs=kwargs.get("removeHs", False),
+            )
+            val_generation_evaluator.device = self.device
+
+            val_metrics = {
+                "valid_rate": MeanMetric(),
+                "unique_rate": MeanMetric(),
+                "sampling_time": MeanMetric(),
+                "novel_rate": MeanMetric(),
+                "mol_pred_loaded": MeanMetric(),
+                "sanitization": MeanMetric(),
+                "inchi_convertible": MeanMetric(),
+                "all_atoms_connected": MeanMetric(),
+                "bond_lengths": MeanMetric(),
+                "bond_angles": MeanMetric(),
+                "internal_steric_clash": MeanMetric(),
+                "aromatic_ring_flatness": MeanMetric(),
+                "non-aromatic_ring_non-flatness": MeanMetric(),
+                "double_bond_flatness": MeanMetric(),
+                "internal_energy": MeanMetric(),
+                "posebusters_rate": MeanMetric(),
+            }
+            val_metrics = ModuleDict(val_metrics)
+
+            gen_list = batch_to_list(out_batch)
+
+            for gen_idx, gen in enumerate(gen_list):
+                try:
+                    mol = self.mol_converter.from_tensor(gen, sanitize=False)
+                except Exception as e:
+                    print(f"Error building molecule: {e}")
+                    continue
+
+                val_generation_evaluator.append_pred_array(
+                    {
+                        "atom_types": np.array([atom.GetAtomicNum() for atom in mol.GetAtoms()]),
+                        "pos": mol.GetConformer().GetPositions(),
+                        "sample_idx": gen_idx,
+                    }
+                )
+            t_end = time.time()
+
+            save_dir = os.path.join(
+                os.getcwd(), "data", "lmdb_geom", f"val_rank_{self.global_rank}_{date.today().strftime('%Y%m%d_%H%M%S')}"
+            )
+            os.makedirs(save_dir, exist_ok=True)
+
+            gen_metrics_dict = val_generation_evaluator.get_metrics(
+                save=kwargs.get("save", True),
+                save_dir=save_dir,
+                n_jobs=kwargs.get("n_jobs", 4),
+            )
+            gen_metrics_dict["sampling_time"] = t_end - t_start
+
+            print("Validation generation metrics:")
+            for k in sorted(gen_metrics_dict.keys()):
+                v = gen_metrics_dict[k].cpu() if torch.is_tensor(gen_metrics_dict[k]) else gen_metrics_dict[k]
+                val_metrics[k](v)
+                print(f"val_geom/{k}: {val_metrics[k].compute().item():.4f}")
+
+        return out_batch
 
     def on_before_optimizer_step(self, optimizer: Optimizer) -> None:
         """Log total L2 grad-norm prior to the optimiser update."""

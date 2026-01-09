@@ -243,6 +243,7 @@ class FlowMatchingModel(nn.Module):
         num_steps: int = 100,
         batch_size: Optional[int] = None,
         return_trajectories: bool = False,
+        **kwargs,
     ):
         """Sample molecules.
 
