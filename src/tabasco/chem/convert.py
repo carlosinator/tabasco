@@ -61,14 +61,14 @@ class MoleculeConverter:
         return atomics
 
     def _get_atom_types(
-        self, atomics: Tensor, padding_mask: Optional[Tensor] = None
+        self, atomics: Tensor, padding_mask: Optional[Tensor] = None, allow_dummy: bool = True
     ) -> List[str]:
         """Return list of element symbols, ignoring rows flagged in
         `padding_mask` if provided."""
         if padding_mask is not None:
             atomics = atomics[~padding_mask]
 
-        return [self._atom_types[i] for i in torch.argmax(atomics, dim=1)]
+        return [(self._atom_types[0] if i == self._dummy_atom_idx and not allow_dummy else self._atom_types[i]) for i in torch.argmax(atomics, dim=1)]
 
     def _pad_to_size(
         self, coords: Tensor, atomics: Tensor, max_size: int
@@ -237,6 +237,7 @@ class MoleculeConverter:
         rescale_coords: bool = True,
         sanitize: bool = True,
         use_openbabel: bool = True,
+        allow_dummy: bool = True,
     ):
         """Inverse of `to_tensor`.
 
@@ -245,6 +246,8 @@ class MoleculeConverter:
             rescale_coords: Multiply coords back by `dataset_normalizer`.
             sanitize: Run `Chem.SanitizeMol`; may fail on exotic molecules.
             use_openbabel: Toggle OpenBabel bond inference.
+            allow_dummy: Allow `'*'` dummy atoms in output molecule. Otherwise,
+                replace with first atom type in `atom_names` (i.e., "C").
 
         Returns:
             RDKit Mol or `None` if any step fails.
@@ -261,9 +264,9 @@ class MoleculeConverter:
         if "padding_mask" in mol_tensor:
             padding_mask = mol_tensor["padding_mask"]
             coords = coords[~padding_mask]
-            atom_types = self._get_atom_types(atomics, padding_mask)
+            atom_types = self._get_atom_types(atomics, padding_mask, allow_dummy=allow_dummy)
         else:
-            atom_types = self._get_atom_types(atomics)
+            atom_types = self._get_atom_types(atomics, allow_dummy=allow_dummy)
 
         if rescale_coords:
             coords = coords * self.dataset_normalizer

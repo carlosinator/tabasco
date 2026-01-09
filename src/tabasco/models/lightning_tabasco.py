@@ -140,7 +140,7 @@ class LightningTabasco(L.LightningModule):
 
             for gen_idx, gen in enumerate(gen_list):
                 try:
-                    mol = self.mol_converter.from_tensor(gen, sanitize=False)
+                    mol = self.mol_converter.from_tensor(gen, sanitize=False, allow_dummy=False)
                 except Exception as e:
                     print(f"Error building molecule: {e}")
                     continue
