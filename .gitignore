@@ -177,3 +177,5 @@ cluster/
 scripts/
 paper_experiments/
 notebooks/
+*.ckpt
+*.pkl
